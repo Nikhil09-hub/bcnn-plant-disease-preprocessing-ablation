@@ -162,7 +162,7 @@ class BCNNManager(object):
             for X, y in self._train_loader:
                 # Data.
                 X = torch.autograd.Variable(X.cuda())
-                y = torch.autograd.Variable(y.cuda(async=True))
+                y = y.cuda()
 
                 # Clear the existing gradients.
                 self._solver.zero_grad()
@@ -207,7 +207,7 @@ class BCNNManager(object):
         for X, y in data_loader:
             # Data.
             X = torch.autograd.Variable(X.cuda())
-            y = torch.autograd.Variable(y.cuda(async=True))
+            y = y.cuda()
 
             # Prediction.
             score = self._net(X)
