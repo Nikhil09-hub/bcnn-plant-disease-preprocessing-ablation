@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""train.py (PlantVillage Branch)
+"""train.py (Cassava Branch)
 
-B-CNN Training Script for PlantVillage Dataset (12 classes).
+B-CNN Training Script for Cassava Dataset (5 classes).
 Supports:
 - Safe pause and resume training (RESUME = True / False)
 - Checkpointing after every epoch (latest and best)
@@ -26,17 +26,17 @@ from sklearn.metrics import f1_score
 # Ensure src is on sys.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from plant_dataset import get_plant_loaders, PLANTVILLAGE_12_CLASSES
+from plant_dataset import get_cassava_loaders, CASSAVA_CLASSES
 
 
 # ==============================================================================
-# RESUME & EXPERIMENT CONFIGURATION (PLANTVILLAGE)
+# RESUME & EXPERIMENT CONFIGURATION (CASSAVA)
 # ==============================================================================
 RESUME = True             # Set to True to resume from latest checkpoint; False to start from Epoch 1
 TOTAL_EPOCHS = 500        # Total epochs to train
 BATCH_SIZE = 32           # Batch size
 IMAGE_SIZE = 224          # Input image resolution (224x224)
-NUM_CLASSES = 12          # 12 PlantVillage classes
+NUM_CLASSES = 5           # 5 Cassava classes (labels 0-4)
 LEARNING_RATE = 0.01      # SGD base learning rate
 MOMENTUM = 0.9            # SGD momentum
 WEIGHT_DECAY = 5e-4       # SGD weight decay
@@ -45,11 +45,11 @@ DATASET_CONDITION = "raw" # Preprocessing condition
 VAL_RATIO = 0.2           # 80/20 train/val split
 NUM_WORKERS = 2           # DataLoader workers (safe on Windows)
 
-# Checkpoint paths
+# Separate Cassava Checkpoint paths (prevents overwriting PlantVillage checkpoints)
 CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), "checkpoints")
-LATEST_CHECKPOINT_PATH = os.path.join(CHECKPOINT_DIR, "bcnn_plantvillage_raw_latest.pth")
-BEST_CHECKPOINT_PATH = os.path.join(CHECKPOINT_DIR, "bcnn_plantvillage_raw_best.pth")
-METRICS_HISTORY_PATH = os.path.join(CHECKPOINT_DIR, "bcnn_plantvillage_raw_metrics.json")
+LATEST_CHECKPOINT_PATH = os.path.join(CHECKPOINT_DIR, "bcnn_cassava_raw_latest.pth")
+BEST_CHECKPOINT_PATH = os.path.join(CHECKPOINT_DIR, "bcnn_cassava_raw_best.pth")
+METRICS_HISTORY_PATH = os.path.join(CHECKPOINT_DIR, "bcnn_cassava_raw_metrics.json")
 # ==============================================================================
 
 
@@ -64,7 +64,7 @@ class BCNN(nn.Module):
     -> self-bilinear pooling (X @ X.T) / (14^2) -> 512*512
     -> square-root normalization -> L2 normalization -> Linear(512^2, num_classes).
     """
-    def __init__(self, num_classes=12, pretrained=True):
+    def __init__(self, num_classes=5, pretrained=True):
         super(BCNN, self).__init__()
         self.num_classes = num_classes
         weights = VGG16_Weights.IMAGENET1K_V1 if pretrained else None
@@ -173,21 +173,21 @@ def save_checkpoint(path, epoch, model, optimizer, best_macro_f1, train_loss, tr
         'history': history,
         'total_elapsed_time': total_elapsed_time,
         'num_classes': NUM_CLASSES,
-        'classes': PLANTVILLAGE_12_CLASSES,
+        'classes': CASSAVA_CLASSES,
         'seed': SEED
     }
     torch.save(checkpoint, path)
 
 
 def run_training(resume=RESUME, max_epochs=TOTAL_EPOCHS):
-    """Main training loop supporting pause/resume for PlantVillage."""
+    """Main training loop supporting pause/resume for Cassava."""
     set_seed(SEED)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'
 
     print("=" * 65, flush=True)
-    print("B-CNN TRAINING PIPELINE (PLANTVILLAGE DATASET)", flush=True)
+    print("B-CNN TRAINING PIPELINE (CASSAVA DATASET)", flush=True)
     print("=" * 65, flush=True)
     print(f"Device: {device} ({gpu_name})", flush=True)
     print(f"Target Total Epochs: {max_epochs}", flush=True)
@@ -196,9 +196,9 @@ def run_training(resume=RESUME, max_epochs=TOTAL_EPOCHS):
     print(f"Number of Classes: {NUM_CLASSES}", flush=True)
     print(f"Dataset Condition: {DATASET_CONDITION}", flush=True)
 
-    # 1. Prepare PlantVillage data loaders
-    print("Loading PlantVillage dataset...", flush=True)
-    train_loader, val_loader = get_plant_loaders(
+    # 1. Prepare Cassava data loaders
+    print("Loading Cassava dataset...", flush=True)
+    train_loader, val_loader = get_cassava_loaders(
         condition=DATASET_CONDITION,
         img_size=IMAGE_SIZE,
         val_ratio=VAL_RATIO,
@@ -231,14 +231,14 @@ def run_training(resume=RESUME, max_epochs=TOTAL_EPOCHS):
             history = checkpoint.get('history', [])
             total_elapsed_time = checkpoint.get('total_elapsed_time', 0.0)
 
-            print("\nResuming from PlantVillage checkpoint...", flush=True)
+            print("\nResuming from Cassava checkpoint...", flush=True)
             print(f"Last completed epoch: {last_completed_epoch}", flush=True)
             print(f"Starting Epoch {start_epoch}/{max_epochs}", flush=True)
         else:
-            print(f"\n[INFO] RESUME=True but no PlantVillage checkpoint found at '{LATEST_CHECKPOINT_PATH}'.", flush=True)
-            print("Starting fresh PlantVillage training from Epoch 1.", flush=True)
+            print(f"\n[INFO] RESUME=True but no Cassava checkpoint found at '{LATEST_CHECKPOINT_PATH}'.", flush=True)
+            print("Starting fresh Cassava training from Epoch 1.", flush=True)
     else:
-        print("\nStarting fresh PlantVillage training from Epoch 1 (RESUME=False).", flush=True)
+        print("\nStarting fresh Cassava training from Epoch 1 (RESUME=False).", flush=True)
 
     if start_epoch > max_epochs:
         print(f"\nTraining already completed! (Completed: {last_completed_epoch}/{max_epochs})", flush=True)
@@ -327,13 +327,13 @@ def run_training(resume=RESUME, max_epochs=TOTAL_EPOCHS):
             print(f"Total elapsed time:    {total_elapsed_time:.2f}s ({total_elapsed_time / 60:.2f}m)", flush=True)
 
         print("\n" + "=" * 65, flush=True)
-        print(f"PLANTVILLAGE TRAINING COMPLETE ({max_epochs}/{max_epochs} epochs)", flush=True)
+        print(f"CASSAVA TRAINING COMPLETE ({max_epochs}/{max_epochs} epochs)", flush=True)
         print(f"Best Validation Macro-F1: {best_val_macro_f1:.4f}", flush=True)
         print("=" * 65, flush=True)
 
     except KeyboardInterrupt:
         print("\n" + "=" * 65, flush=True)
-        print("[PAUSED] PlantVillage training interrupted by user (Ctrl+C).", flush=True)
+        print("[PAUSED] Cassava training interrupted by user (Ctrl+C).", flush=True)
         if last_completed_epoch > 0:
             print(f"Latest completed epoch {last_completed_epoch} is safely saved in:", flush=True)
             print(f"  {LATEST_CHECKPOINT_PATH}", flush=True)
@@ -346,7 +346,7 @@ def run_training(resume=RESUME, max_epochs=TOTAL_EPOCHS):
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description="Train B-CNN on PlantVillage with pause/resume support.")
+    parser = argparse.ArgumentParser(description="Train B-CNN on Cassava with pause/resume support.")
     parser.add_argument('--resume', action='store_true', default=RESUME, help='Resume from checkpoint')
     parser.add_argument('--epochs', type=int, default=TOTAL_EPOCHS, help='Total epochs to train')
     args = parser.parse_args()
