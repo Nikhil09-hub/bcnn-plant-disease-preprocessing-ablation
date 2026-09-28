@@ -264,4 +264,13 @@ def get_cassava_loaders(
     )
 
     return train_loader, val_loader
-    
+
+
+# Backward compatible aliases
+PLANTVILLAGE_12_CLASSES = PLANTVILLAGE_CLASSES
+
+
+def get_plant_loaders(*args, **kwargs):
+    """Wrapper for get_plantvillage_loaders returning (train_loader, val_loader)."""
+    train_loader, val_loader, _ = get_plantvillage_loaders(*args, **kwargs)
+    return train_loader, val_loader
