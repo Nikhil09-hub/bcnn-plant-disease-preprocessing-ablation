@@ -26,7 +26,7 @@ from sklearn.metrics import f1_score
 # Ensure src is on sys.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from plant_dataset import get_plant_loaders, PLANTVILLAGE_12_CLASSES
+from plant_dataset import get_plantvillage_loaders, PLANTVILLAGE_CLASSES
 
 
 # ==============================================================================
@@ -173,7 +173,7 @@ def save_checkpoint(path, epoch, model, optimizer, best_macro_f1, train_loss, tr
         'history': history,
         'total_elapsed_time': total_elapsed_time,
         'num_classes': NUM_CLASSES,
-        'classes': PLANTVILLAGE_12_CLASSES,
+        'classes': PLANTVILLAGE_CLASSES,
         'seed': SEED
     }
     torch.save(checkpoint, path)
@@ -198,7 +198,7 @@ def run_training(resume=RESUME, max_epochs=TOTAL_EPOCHS):
 
     # 1. Prepare PlantVillage data loaders
     print("Loading PlantVillage dataset...", flush=True)
-    train_loader, val_loader = get_plant_loaders(
+    train_loader, val_loader, _ = get_plantvillage_loaders(
         condition=DATASET_CONDITION,
         img_size=IMAGE_SIZE,
         val_ratio=VAL_RATIO,
